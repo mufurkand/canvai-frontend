@@ -5,7 +5,7 @@ import useDraw from "@/hooks/useDraw";
 import type { Draw } from "@/types/typing";
 
 export default function Home() {
-  const { canvasRef, onMouseDown } = useDraw(draw);
+  const { canvasRef, onMouseDown, clear } = useDraw(draw);
 
   // with object notation the order of the parameters does not matter
   function draw({ prevPoint, currentPoint, ctx }: Draw) {
@@ -26,6 +26,9 @@ export default function Home() {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center">
+      <button type="button" onClick={clear}>
+        Clear
+      </button>
       <canvas
         ref={canvasRef}
         onMouseDown={onMouseDown}

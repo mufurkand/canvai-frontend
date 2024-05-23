@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import type { Draw, Point } from "@/types/typing";
-import { log } from "console";
 
 function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
   const [mouseDown, setMouseDown] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevPoint = useRef<Point | null>(null);
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
 
   const onMouseDown = () => {
     setMouseDown(true);
@@ -17,8 +24,6 @@ function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
       if (!mouseDown) return;
 
       const currentPoint = computePointInCanvas(e);
-      console.log(currentPoint);
-
       const ctx = canvasRef.current?.getContext("2d");
       if (!ctx || !currentPoint) return;
 
@@ -54,7 +59,7 @@ function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
     };
   }, [mouseDown, onDraw]);
 
-  return { canvasRef, onMouseDown };
+  return { canvasRef, onMouseDown, clear };
 }
 
 export default useDraw;
