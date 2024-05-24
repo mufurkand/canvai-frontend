@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Draw, Point } from "@/types/typing";
 
-function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
+function useDraw(
+  onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void,
+  isLocked: boolean
+) {
   const [mouseDown, setMouseDown] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,7 +24,7 @@ function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (!mouseDown) return;
+      if (!mouseDown || isLocked) return;
 
       const currentPoint = computePointInCanvas(e);
       const ctx = canvasRef.current?.getContext("2d");
@@ -57,7 +60,7 @@ function useDraw(onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void) {
       canvasRef.current?.removeEventListener("mousemove", handler);
       window.removeEventListener("mouseup", mouseUpHandler);
     };
-  }, [mouseDown, onDraw]);
+  }, [mouseDown, onDraw, isLocked]);
 
   return { canvasRef, onMouseDown, clear };
 }
