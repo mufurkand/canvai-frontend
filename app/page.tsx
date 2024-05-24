@@ -1,6 +1,8 @@
 // custom hook needs use client to work
 "use client";
 
+import { Trash2 } from "lucide-react";
+
 import useDraw from "@/hooks/useDraw";
 import type { Draw } from "@/types/typing";
 
@@ -25,10 +27,7 @@ export default function Home() {
   }
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
-      <button type="button" onClick={clear}>
-        Clear
-      </button>
+    <div className="w-screen h-screen flex items-center justify-center gap-5">
       <canvas
         ref={canvasRef}
         onMouseDown={onMouseDown}
@@ -36,6 +35,13 @@ export default function Home() {
         height={750}
         className="border border-black rounded-md"
       />
+      <button
+        type="button"
+        onClick={clear}
+        className="border border-black rounded-md p-2"
+      >
+        <Trash2 size={50} />
+      </button>
     </div>
   );
 }
