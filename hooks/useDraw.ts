@@ -10,7 +10,7 @@ function useDraw(
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevPoint = useRef<Point | null>(null);
 
-  const clear = () => {
+  const clearCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -62,7 +62,7 @@ function useDraw(
     };
   }, [mouseDown, onDraw, isLocked]);
 
-  return { canvasRef, onMouseDown, clear };
+  return { canvasRef, onMouseDown, clearCanvas };
 }
 
 export default useDraw;

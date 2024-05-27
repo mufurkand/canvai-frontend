@@ -2,21 +2,14 @@ import { useTimer } from "react-timer-hook";
 
 export default function MyTimer({
   expiryTimestamp,
-  setIsLocked,
-  saveCroppedCanvas,
-  key,
+  expireFunction,
 }: {
   expiryTimestamp: Date;
-  setIsLocked: React.Dispatch<React.SetStateAction<boolean>>;
-  saveCroppedCanvas: () => void;
-  key: number;
+  expireFunction: () => void;
 }) {
   const { totalSeconds } = useTimer({
     expiryTimestamp,
-    onExpire: () => {
-      setIsLocked(true);
-      saveCroppedCanvas();
-    },
+    onExpire: expireFunction,
   });
 
   return (

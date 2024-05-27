@@ -5,16 +5,20 @@ import useDraw from "@/hooks/useDraw";
 import { Draw } from "@/types/typing";
 import React, { useState } from "react";
 import Timer from "./Timer";
-import { Trash2, RotateCw } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
-export default function Canvas() {
+export default function Canvas({
+  setChangeTheme,
+  theme,
+}: {
+  setChangeTheme: React.Dispatch<React.SetStateAction<boolean>>;
+  theme: string;
+}) {
   const [isLocked, setIsLocked] = useState(false);
-  // timer key is used to reset the timer
-  const [timerKey, setTimerKey] = useState(0);
-  const { canvasRef, onMouseDown, clear } = useDraw(draw, isLocked);
+  const { canvasRef, onMouseDown, clearCanvas } = useDraw(draw, isLocked);
 
   const time = new Date();
-  time.setSeconds(time.getSeconds() + 30);
+  time.setSeconds(time.getSeconds() + 10);
 
   // with object notation the order of the parameters does not matter
   function draw({ prevPoint, currentPoint, ctx }: Draw) {
@@ -122,6 +126,17 @@ export default function Canvas() {
     link.click();
   }
 
+  function drawingExpireFunction() {
+    setIsLocked(true);
+    saveCroppedCanvas();
+  }
+
+  function intermissionExpireFunction() {
+    clearCanvas();
+    setIsLocked(false);
+    setChangeTheme(true);
+  }
+
   return (
     <div className="w-screen h-screen flex items-center justify-center gap-5">
       <canvas
@@ -132,32 +147,30 @@ export default function Canvas() {
         className="border-2 border-black rounded-md"
       />
       <div className="flex flex-col items-center gap-5">
-        <Timer
-          expiryTimestamp={time}
-          setIsLocked={setIsLocked}
-          saveCroppedCanvas={saveCroppedCanvas}
-          key={timerKey}
-        />
         {isLocked ? (
-          <button
-            type="button"
-            onClick={() => {
-              setIsLocked(false);
-              setTimerKey((prev) => prev + 1);
-              clear();
-            }}
-            className="border-2 border-black rounded-md p-2"
-          >
-            <RotateCw size={50} />
-          </button>
+          <>
+            <h1 className="text-4xl font-bold">Intermission</h1>
+            <Timer
+              expiryTimestamp={time}
+              expireFunction={intermissionExpireFunction}
+            />
+          </>
         ) : (
-          <button
-            type="button"
-            onClick={clear}
-            className="border-2 border-black rounded-md p-2"
-          >
-            <Trash2 size={50} />
-          </button>
+          <>
+            <p>Your current theme is:</p>
+            <h1 className="text-4xl font-bold">{theme}</h1>
+            <Timer
+              expiryTimestamp={time}
+              expireFunction={drawingExpireFunction}
+            />
+            <button
+              type="button"
+              onClick={clearCanvas}
+              className="border-2 border-black rounded-md p-2"
+            >
+              <Trash2 size={50} />
+            </button>
+          </>
         )}
       </div>
     </div>
