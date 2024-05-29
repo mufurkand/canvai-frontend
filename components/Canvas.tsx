@@ -110,6 +110,10 @@ export default function Canvas({
       croppedHeight // destination rectangle
     );
 
+    croppedCtx.globalCompositeOperation = "difference";
+    croppedCtx.fillStyle = "white";
+    croppedCtx.fillRect(0, 0, canvas.width, canvas.height);
+
     return croppedCanvas;
   }
 
