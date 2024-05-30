@@ -3,7 +3,7 @@
 
 import useDraw from "@/hooks/useDraw";
 import { Draw } from "@/types/typing";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Timer from "./Timer";
 import { Trash2 } from "lucide-react";
 
@@ -15,10 +15,55 @@ export default function Canvas({
   theme: string;
 }) {
   const [isLocked, setIsLocked] = useState(false);
+  const wsInstance = useRef<WebSocket | null>(null);
+  const [prediction, setPrediction] = useState("");
   const { canvasRef, onMouseDown, clearCanvas } = useDraw(draw, isLocked);
 
   const time = new Date();
   time.setSeconds(time.getSeconds() + 10);
+
+  async function setupWebSocket() {
+    const ws = new WebSocket("ws://localhost:8000");
+
+    ws.onmessage = (event) => {
+      // parse prediction from the server with zod and set it to the state
+      const data = JSON.parse(event.data);
+      console.log(data);
+    };
+
+    ws.onclose = () => (wsInstance.current = null);
+
+    return ws;
+  }
+
+  async function getPrediction() {
+    const image = saveCroppedCanvas();
+    if (!image) return;
+    const query = {
+      type: "prediction",
+      data: {
+        image_data: image,
+      },
+    };
+
+    if (wsInstance.current && wsInstance.current.readyState === 1) {
+      wsInstance.current.send(JSON.stringify(query));
+    }
+  }
+
+  useEffect(() => {
+    if (!wsInstance.current) {
+      setupWebSocket().then((ws) => {
+        wsInstance.current = ws;
+      });
+    }
+
+    setInterval(getPrediction, 1000);
+
+    return () => {
+      if (wsInstance.current) wsInstance.current.close();
+    };
+  }, []);
 
   // with object notation the order of the parameters does not matter
   function draw({ prevPoint, currentPoint, ctx }: Draw) {
@@ -121,18 +166,11 @@ export default function Canvas({
   function saveCroppedCanvas() {
     const croppedCanvas = cropCanvasToSquare();
     if (!croppedCanvas) return;
-    const croppedDataUrl = croppedCanvas.toDataURL();
-
-    // create a download link and click it to save the image
-    const link = document.createElement("a");
-    link.href = croppedDataUrl;
-    link.download = "cropped-drawing.png";
-    link.click();
+    return croppedCanvas.toDataURL();
   }
 
   function drawingExpireFunction() {
     setIsLocked(true);
-    saveCroppedCanvas();
   }
 
   function intermissionExpireFunction() {

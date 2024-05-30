@@ -13,8 +13,7 @@
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "react-timer-hook": "^3.0.7",
-    "ws": "^8.17.0"
+    "react-timer-hook": "^3.0.7"
   },
   "devDependencies": {
     "@types/node": "^20",
