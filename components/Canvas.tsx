@@ -142,40 +142,46 @@ export default function Canvas({
   }
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center gap-5">
-      <canvas
-        ref={canvasRef}
-        onMouseDown={onMouseDown}
-        width={750}
-        height={750}
-        className="border-2 border-black rounded-md"
-      />
-      <div className="flex flex-col items-center gap-5">
-        {isLocked ? (
-          <>
-            <h1 className="text-4xl font-bold">Intermission</h1>
-            <Timer
-              expiryTimestamp={time}
-              expireFunction={intermissionExpireFunction}
-            />
-          </>
-        ) : (
-          <>
-            <p>Your current theme is:</p>
-            <h1 className="text-4xl font-bold">{theme}</h1>
-            <Timer
-              expiryTimestamp={time}
-              expireFunction={drawingExpireFunction}
-            />
-            <button
-              type="button"
-              onClick={clearCanvas}
-              className="border-2 border-black rounded-md p-2"
-            >
-              <Trash2 size={50} />
-            </button>
-          </>
-        )}
+    <div className="w-screen h-screen flex flex-col items-center justify-center gap-5">
+      <div className="flex gap-5 items-center">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={onMouseDown}
+          width={750}
+          height={750}
+          className="border-2 border-secondary rounded-md bg-white"
+        />
+        <div className="flex flex-col items-center gap-5">
+          {isLocked ? (
+            <>
+              <h1 className="text-4xl font-bold">Intermission</h1>
+              <Timer
+                expiryTimestamp={time}
+                expireFunction={intermissionExpireFunction}
+              />
+            </>
+          ) : (
+            <>
+              <p>Your current theme is:</p>
+              <h1 className="text-4xl font-bold">{theme}</h1>
+              <Timer
+                expiryTimestamp={time}
+                expireFunction={drawingExpireFunction}
+              />
+              <button
+                type="button"
+                onClick={clearCanvas}
+                className="border-2 border-secondary rounded-md p-2"
+              >
+                <Trash2 size={50} />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <h1 className="font-bold">CanvAI:</h1>
+        <p>prediction placeholder</p>
       </div>
     </div>
   );
