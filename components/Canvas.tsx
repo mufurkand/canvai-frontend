@@ -6,51 +6,21 @@ import { Draw } from "@/types/typing";
 import React, { useEffect, useRef, useState } from "react";
 import Timer from "./Timer";
 import { Trash2 } from "lucide-react";
-import { z } from "zod";
 
-export default function Canvas({
-  setChangeTheme,
-  theme,
-}: {
-  setChangeTheme: React.Dispatch<React.SetStateAction<boolean>>;
+type CanvasProps = {
   theme: string;
-}) {
-  const [isLocked, setIsLocked] = useState(false);
-  const wsInstance = useRef<WebSocket | null>(null);
-  const [prediction, setPrediction] = useState("");
-  const { canvasRef, onMouseDown, clearCanvas } = useDraw(draw, isLocked);
+  wsInstance: React.MutableRefObject<WebSocket | null>;
+  prediction: string;
+};
 
-  const time = new Date();
-  time.setSeconds(time.getSeconds() + 10);
+export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
+  const predictionInterval = useRef<NodeJS.Timeout | null>(null);
+  const { canvasRef, onMouseDown, clearCanvas } = useDraw(draw, false);
 
-  async function setupWebSocket() {
-    const ws = new WebSocket("ws://localhost:8000");
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      const predictionSchema = z.object({
-        type: z.string(),
-        data: z.object({
-          status: z.string(),
-          prediction: z.string(),
-          probability: z.number(),
-        }),
-      });
-      const predictionResult = predictionSchema.safeParse(data);
-
-      if (!predictionResult.success) {
-        // handle error
-        console.error(predictionResult.error);
-        return;
-      }
-
-      setPrediction(predictionResult.data.data.prediction);
-    };
-
-    ws.onclose = () => (wsInstance.current = null);
-
-    return ws;
-  }
+  const drawDuration = new Date();
+  drawDuration.setSeconds(drawDuration.getSeconds() + 60);
+  const intervalDuration = new Date();
+  intervalDuration.setSeconds(intervalDuration.getSeconds() + 10);
 
   function getPrediction() {
     const image = saveCroppedCanvas();
@@ -68,18 +38,16 @@ export default function Canvas({
   }
 
   useEffect(() => {
-    if (!wsInstance.current) {
-      setupWebSocket().then((ws) => {
-        wsInstance.current = ws;
-      });
-    }
-
-    setInterval(getPrediction, 1000);
+    clearCanvas();
+    predictionInterval.current = setInterval(getPrediction, 1000);
 
     return () => {
-      if (wsInstance.current) wsInstance.current.close();
+      if (predictionInterval.current) {
+        clearInterval(predictionInterval.current);
+        predictionInterval.current = null;
+      }
     };
-  }, []);
+  }, [theme]);
 
   // with object notation the order of the parameters does not matter
   function draw({ prevPoint, currentPoint, ctx }: Draw) {
@@ -185,16 +153,6 @@ export default function Canvas({
     return croppedCanvas.toDataURL();
   }
 
-  function drawingExpireFunction() {
-    setIsLocked(true);
-  }
-
-  function intermissionExpireFunction() {
-    clearCanvas();
-    setIsLocked(false);
-    setChangeTheme(true);
-  }
-
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center gap-5">
       <div className="flex gap-5 items-center">
@@ -206,31 +164,16 @@ export default function Canvas({
           className="border-2 border-secondary rounded-md bg-white"
         />
         <div className="flex flex-col items-center gap-5">
-          {isLocked ? (
-            <>
-              <h1 className="text-4xl font-bold">Intermission</h1>
-              <Timer
-                expiryTimestamp={time}
-                expireFunction={intermissionExpireFunction}
-              />
-            </>
-          ) : (
-            <>
-              <p>Your current theme is:</p>
-              <h1 className="text-4xl font-bold">{theme}</h1>
-              <Timer
-                expiryTimestamp={time}
-                expireFunction={drawingExpireFunction}
-              />
-              <button
-                type="button"
-                onClick={clearCanvas}
-                className="border-2 border-secondary rounded-md p-2"
-              >
-                <Trash2 size={50} />
-              </button>
-            </>
-          )}
+          <p>Your current theme is:</p>
+          <h1 className="text-4xl font-bold">{theme}</h1>
+          <Timer expiryTimestamp={drawDuration} expireFunction={() => {}} />
+          <button
+            type="button"
+            onClick={clearCanvas}
+            className="border-2 border-secondary rounded-md p-2"
+          >
+            <Trash2 size={50} />
+          </button>
         </div>
       </div>
       <div className="flex gap-2">

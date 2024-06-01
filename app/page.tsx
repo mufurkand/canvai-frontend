@@ -1,31 +1,113 @@
 "use client";
 
 import Canvas from "@/components/Canvas";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import {
+  startSuccessSchema,
+  startErrorSchema,
+  predictionErrorSchema,
+  predictionSuccessSchema,
+  predictionFailureSchema,
+  finishSchema,
+} from "@/schemas/responses";
+import Start from "@/components/Start";
 
 export default function Home() {
+  const wsInstance = useRef<WebSocket | null>(null);
   const [theme, setTheme] = useState("");
-  const [changeTheme, setChangeTheme] = useState(false);
-  const themes = useRef<string[]>([
-    "dog",
-    "bed",
-    "bicycle",
-    "house",
-    "flower",
-    "tree",
-    "car",
-  ]);
+  const [prediction, setPrediction] = useState("");
+  const [isLoading, SetisLoading] = useState(true);
 
-  useEffect(() => {
-    // TODO: game over screen
-    if (themes.current.length === 0) return;
+  async function start() {
+    wsInstance.current = await setupWebSocket();
+    SetisLoading(false);
+  }
 
-    const randomIndex = Math.floor(Math.random() * themes.current.length);
-    setTheme(themes.current[randomIndex]);
-    themes.current.splice(randomIndex, 1);
+  async function setupWebSocket() {
+    const ws = new WebSocket("ws://localhost:8000");
 
-    setChangeTheme(false);
-  }, [changeTheme]);
+    ws.onopen = () => {
+      const query = {
+        type: "start",
+        data: {
+          duration: 60,
+        },
+      };
+      console.log("WebSocket opened");
+      ws.send(JSON.stringify(query));
+    };
 
-  return <Canvas theme={theme} setChangeTheme={setChangeTheme} />;
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      let schema;
+      let result;
+
+      // start success
+      schema = startSuccessSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        setTheme(result.data.data.image);
+        SetisLoading(false);
+        return;
+      }
+
+      // start error
+      schema = startErrorSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        console.error(result.data.data.message);
+        return;
+      }
+
+      // prediction success
+      schema = predictionSuccessSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        setPrediction(result.data.data.prediction);
+        setTheme(result.data.data.nextImage);
+        return;
+      }
+
+      // prediction failure
+      schema = predictionFailureSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        setPrediction(result.data.data.prediction);
+        return;
+      }
+
+      // prediction error
+      schema = predictionErrorSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        console.error(result.data.data.message);
+        return;
+      }
+
+      // finish
+      schema = finishSchema;
+      result = schema.safeParse(data);
+      if (result.success) {
+        console.log("Score: " + result.data.data.score);
+        SetisLoading(true);
+        return;
+      }
+
+      console.error("Unknown message type");
+    };
+
+    ws.onclose = () => {
+      wsInstance.current = null;
+      console.log("WebSocket closed");
+    };
+
+    return ws;
+  }
+
+  if (isLoading) return <Start start={start} />;
+
+  return (
+    <Canvas theme={theme} wsInstance={wsInstance} prediction={prediction} />
+  );
 }
