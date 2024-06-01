@@ -6,6 +6,7 @@ import { Draw } from "@/types/typing";
 import React, { useEffect, useRef, useState } from "react";
 import Timer from "./Timer";
 import { Trash2 } from "lucide-react";
+import { z } from "zod";
 
 export default function Canvas({
   setChangeTheme,
@@ -26,9 +27,24 @@ export default function Canvas({
     const ws = new WebSocket("ws://localhost:8000");
 
     ws.onmessage = (event) => {
-      // parse prediction from the server with zod and set it to the state
       const data = JSON.parse(event.data);
-      console.log(data);
+      const predictionSchema = z.object({
+        type: z.string(),
+        data: z.object({
+          status: z.string(),
+          prediction: z.string(),
+          probability: z.number(),
+        }),
+      });
+      const predictionResult = predictionSchema.safeParse(data);
+
+      if (!predictionResult.success) {
+        // handle error
+        console.error(predictionResult.error);
+        return;
+      }
+
+      setPrediction(predictionResult.data.data.prediction);
     };
 
     ws.onclose = () => (wsInstance.current = null);
@@ -36,7 +52,7 @@ export default function Canvas({
     return ws;
   }
 
-  async function getPrediction() {
+  function getPrediction() {
     const image = saveCroppedCanvas();
     if (!image) return;
     const query = {
@@ -86,7 +102,7 @@ export default function Canvas({
     | { top: number; bottom: number; left: number; right: number }
     | undefined {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext("2d", { willReadFrequently: true });
 
     if (!canvas || !ctx) return;
 
@@ -219,7 +235,11 @@ export default function Canvas({
       </div>
       <div className="flex gap-2">
         <h1 className="font-bold">CanvAI:</h1>
-        <p>prediction placeholder</p>
+        {prediction === "" ? (
+          <p>Please draw something to get started!</p>
+        ) : (
+          <p>That is a(n) {prediction}!</p>
+        )}
       </div>
     </div>
   );
