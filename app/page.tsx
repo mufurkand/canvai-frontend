@@ -24,7 +24,10 @@ export default function Home() {
   }
 
   async function setupWebSocket() {
-    const ws = new WebSocket("ws://localhost:8000");
+    if (process.env.NEXT_PUBLIC_BACKEND_WS_URL === undefined)
+      throw new Error("NEXT_PUBLIC_BACKEND_WS_URL is not defined.");
+
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_BACKEND_WS_URL);
 
     ws.onopen = () => {
       const query = {
