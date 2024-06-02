@@ -11,16 +11,25 @@ import {
   finishSchema,
 } from "@/schemas/responses";
 import Start from "@/components/Start";
+import End from "@/components/End";
 
 export default function Home() {
   const wsInstance = useRef<WebSocket | null>(null);
   const [theme, setTheme] = useState("");
   const [prediction, setPrediction] = useState("");
-  const [isLoading, SetisLoading] = useState(true);
+  const [isReady, setIsReady] = useState(true);
+  const [score, setScore] = useState(-1);
 
   async function start() {
     wsInstance.current = await setupWebSocket();
-    SetisLoading(false);
+    setIsReady(false);
+  }
+
+  function end() {
+    setPrediction("");
+    setTheme("");
+    setIsReady(true);
+    setScore(-1);
   }
 
   async function setupWebSocket() {
@@ -51,7 +60,7 @@ export default function Home() {
       result = schema.safeParse(data);
       if (result.success) {
         setTheme(result.data.data.image);
-        SetisLoading(false);
+        setIsReady(false);
         return;
       }
 
@@ -92,8 +101,7 @@ export default function Home() {
       schema = finishSchema;
       result = schema.safeParse(data);
       if (result.success) {
-        console.log("Score: " + result.data.data.score);
-        SetisLoading(true);
+        setScore(result.data.data.score);
         return;
       }
 
@@ -108,7 +116,8 @@ export default function Home() {
     return ws;
   }
 
-  if (isLoading) return <Start start={start} />;
+  if (score > -1) return <End score={score} end={end} />;
+  if (isReady) return <Start start={start} />;
 
   return (
     <Canvas theme={theme} wsInstance={wsInstance} prediction={prediction} />
