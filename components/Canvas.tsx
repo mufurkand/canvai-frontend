@@ -184,7 +184,7 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
             "rounded-md bg-white" +
             (isPredicted
               ? " border-4 border-green-500"
-              : "border-2 border-secondary")
+              : " border-2 border-secondary")
           }
         />
         <div className="flex flex-col items-center gap-5">
