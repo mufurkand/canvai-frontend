@@ -3,9 +3,9 @@
 
 import useDraw from "@/hooks/useDraw";
 import { Draw } from "@/types/typing";
+import { ArrowRight, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import Timer from "./Timer";
-import { Trash2 } from "lucide-react";
 
 type CanvasProps = {
   theme: string;
@@ -21,6 +21,19 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
   drawDuration.setSeconds(drawDuration.getSeconds() + 60);
   const intervalDuration = new Date();
   intervalDuration.setSeconds(intervalDuration.getSeconds() + 10);
+
+  function skipTheme() {
+    const query = {
+      type: "prediction",
+      data: {
+        image_data: "skip",
+      },
+    };
+
+    if (wsInstance.current && wsInstance.current.readyState === 1) {
+      wsInstance.current.send(JSON.stringify(query));
+    }
+  }
 
   function getPrediction() {
     const image = saveCroppedCanvas();
@@ -173,6 +186,13 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
             className="border-2 border-secondary rounded-md p-2"
           >
             <Trash2 size={50} />
+          </button>
+          <button
+            type="button"
+            onClick={skipTheme}
+            className="border-2 border-secondary rounded-md p-2"
+          >
+            <ArrowRight size={50} />
           </button>
         </div>
       </div>
