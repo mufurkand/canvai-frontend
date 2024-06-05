@@ -85,6 +85,14 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
     ctx.fill();
   }
 
+  // returns true if all color channels in each pixel are 0 (or "blank")
+  function isCanvasBlank(canvas: HTMLCanvasElement) {
+    return !canvas
+      .getContext("2d")!
+      .getImageData(0, 0, canvas.width, canvas.height)
+      .data.some((channel) => channel !== 0);
+  }
+
   function getCropRectangle():
     | { top: number; bottom: number; left: number; right: number }
     | undefined {
@@ -122,6 +130,7 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
   // function to crop the canvas to a square
   function cropCanvasToSquare() {
     const canvas = canvasRef.current;
+    if (isCanvasBlank(canvas!)) return "empty";
     const crop = getCropRectangle();
     if (!crop || !canvas) return;
     const { top, bottom, left, right } = crop;
@@ -169,6 +178,7 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
   function saveCroppedCanvas() {
     const croppedCanvas = cropCanvasToSquare();
     if (!croppedCanvas) return;
+    if (croppedCanvas === "empty") return "empty";
     return croppedCanvas.toDataURL();
   }
 
@@ -212,7 +222,13 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
         {prediction === "" ? (
           <p>Please draw something to get started!</p>
         ) : (
-          <p>That is a(n) {prediction}!</p>
+          <p>
+            {prediction === "skipped"
+              ? "Theme skipped!"
+              : prediction === "empty"
+              ? "No drawing detected!"
+              : `That is a(n) ${prediction}!`}
+          </p>
         )}
       </div>
     </div>
