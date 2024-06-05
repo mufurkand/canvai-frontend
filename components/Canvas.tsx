@@ -6,6 +6,7 @@ import { Draw } from "@/types/typing";
 import { ArrowRight, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import Timer from "./Timer";
+import { set } from "zod";
 
 type CanvasProps = {
   theme: string;
@@ -16,6 +17,7 @@ type CanvasProps = {
 export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
   const predictionInterval = useRef<NodeJS.Timeout | null>(null);
   const { canvasRef, onMouseDown, clearCanvas } = useDraw(draw, false);
+  const [isPredicted, setIsPredicted] = useState(false);
 
   const drawDuration = new Date();
   drawDuration.setSeconds(drawDuration.getSeconds() + 60);
@@ -52,6 +54,10 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
 
   useEffect(() => {
     clearCanvas();
+    setIsPredicted(true);
+    setTimeout(() => {
+      setIsPredicted(false);
+    }, 500);
     predictionInterval.current = setInterval(getPrediction, 1000);
 
     return () => {
@@ -174,7 +180,12 @@ export default function Canvas({ theme, wsInstance, prediction }: CanvasProps) {
           onMouseDown={onMouseDown}
           width={750}
           height={750}
-          className="border-2 border-secondary rounded-md bg-white"
+          className={
+            "rounded-md bg-white" +
+            (isPredicted
+              ? " border-4 border-green-500"
+              : "border-2 border-secondary")
+          }
         />
         <div className="flex flex-col items-center gap-5">
           <p>Your current theme is:</p>

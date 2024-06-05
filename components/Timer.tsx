@@ -17,7 +17,9 @@ export default function MyTimer({
       <p className="text-lg text-center">
         Remaining <br /> Time
       </p>
-      <p className="text-4xl">{totalSeconds}</p>
+      <p className={"text-4xl" + (totalSeconds < 10 ? " text-red-500" : "")}>
+        {totalSeconds}
+      </p>
     </div>
   );
 }
